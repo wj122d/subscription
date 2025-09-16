@@ -365,7 +365,7 @@ python3 start_web_ui.py --no-browser
 #### 1. 使用预构建镜像 (推荐)
 ```bash
 # 拉取最新镜像
-docker pull ghcr.io/yourusername/subscription-converter:latest
+docker pull ghcr.io/wj122d/subscription:latest
 
 # 运行容器
 docker run -d \
@@ -375,7 +375,7 @@ docker run -d \
   -e DEBUG=false \
   -v $(pwd)/config:/app/config \
   --restart unless-stopped \
-  ghcr.io/yourusername/subscription-converter:latest
+  ghcr.io/wj122d/subscription:latest
 
 # 查看容器状态
 docker ps -a | grep subscription-converter
@@ -428,7 +428,7 @@ docker-compose down
 #### 3. 手动构建镜像
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/subscription-converter.git
+git clone https://github.com/wj122d/subscription.git
 cd subscription-converter
 
 # 构建镜像
