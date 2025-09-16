@@ -43,6 +43,19 @@ pip3 install PyYAML
 
 ## 📖 使用方法
 
+### 开发环境配置
+1. 启动后端服务:
+```bash
+node server/index.js
+```
+
+2. 启动前端开发服务器:
+```bash
+cd web-ui && npm start
+```
+
+前端会自动代理API请求到后端 (http://localhost:3001)
+
 ### Web界面使用
 
 ```bash
@@ -348,6 +361,159 @@ python3 start_web_ui.py --no-browser
 ```
 
 ### Docker部署
+
+#### 1. 使用预构建镜像 (推荐)
+```bash
+# 拉取最新镜像
+docker pull ghcr.io/yourusername/subscription-converter:latest
+
+# 运行容器
+docker run -d \
+  --name subscription-converter \
+  -p 8000:8000 \
+  -e PORT=8000 \
+  -e DEBUG=false \
+  -v $(pwd)/config:/app/config \
+  --restart unless-stopped \
+  ghcr.io/yourusername/subscription-converter:latest
+
+# 查看容器状态
+docker ps -a | grep subscription-converter
+```
+
+#### 2. 使用Docker Compose部署 (推荐用于生产环境)
+创建`docker-compose.yml`文件:
+```yaml
+version: '3.8'
+services:
+  subscription-converter:
+    image: ghcr.io/yourusername/subscription-converter:latest
+    container_name: subscription-converter
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DEBUG=false
+      - NODE_ENV=production
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - subscription-network
+
+networks:
+  subscription-network:
+    driver: bridge
+```
+
+启动服务:
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+#### 3. 手动构建镜像
+```bash
+# 克隆仓库
+git clone https://github.com/yourusername/subscription-converter.git
+cd subscription-converter
+
+# 构建镜像
+docker build -t subscription-converter:latest .
+
+# 运行容器
+docker run -d \
+  --name subscription-converter \
+  -p 8000:8000 \
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/logs:/app/logs \
+  --restart unless-stopped \
+  subscription-converter:latest
+```
+
+#### 环境变量配置
+| 变量名 | 说明 | 默认值 | 可选值 |
+|-------|------|--------|-------|
+| PORT | 服务端口 | 8000 | 任意有效端口号 |
+| DEBUG | 调试模式 | false | true/false |
+| NODE_ENV | 运行环境 | production | development/production |
+| CORS_ORIGIN | CORS来源设置 | * | 特定域名或* |
+| RATE_LIMIT_WINDOW_MS | 速率限制窗口(毫秒) | 900000 | 任意正整数 |
+| RATE_LIMIT_MAX | 速率限制最大请求数 | 100 | 任意正整数 |
+
+#### 数据卷说明
+| 数据卷 | 说明 | 用途 |
+|--------|------|------|
+| /app/config | 配置文件目录 | 存储持久化配置和模板 |
+| /app/logs | 日志文件目录 | 存储应用日志 |
+
+#### 网络配置
+- 默认使用bridge网络
+- 可通过`--network`参数指定自定义网络
+- 支持使用`--network host`直接使用主机网络(适用于需要访问主机网络的场景)
+
+#### 资源限制
+```bash
+# 限制CPU和内存使用
+docker run -d \
+  --name subscription-converter \
+  -p 8000:8000 \
+  --cpus 0.5 \
+  --memory 512m \
+  -v $(pwd)/config:/app/config \
+  ghcr.io/yourusername/subscription-converter:latest
+```
+
+#### 常用命令
+```bash
+# 查看容器日志
+docker logs -f subscription-converter
+
+# 进入容器内部
+docker exec -it subscription-converter /bin/sh
+
+# 停止容器
+docker stop subscription-converter
+
+# 重启容器
+docker restart subscription-converter
+
+# 更新镜像
+docker pull ghcr.io/yourusername/subscription-converter:latest
+docker stop subscription-converter
+docker rm subscription-converter
+# 然后使用新镜像重新运行容器
+
+# 查看容器资源使用情况
+docker stats subscription-converter
+```
+
+#### 多架构支持
+镜像支持以下CPU架构:
+- amd64 (x86_64)
+- arm64 (aarch64)
+- armv7 (32位ARM)
+
+Docker会自动选择适合您系统的镜像版本。
+
+#### 安全建议
+- 使用非root用户运行容器
+- 定期更新镜像以获取安全补丁
+- 使用只读文件系统，仅为必要的目录提供写入权限
+- 使用Docker Secrets管理敏感信息
 
 您可以使用以下方式部署Subscription-Converter：
 
