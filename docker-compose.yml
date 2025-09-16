@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  subscription-converter:
+    build: .
+    container_name: subscription-converter
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
